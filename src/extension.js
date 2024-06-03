@@ -264,11 +264,14 @@ export default class enhancedosk extends Extension {
   }
 
   getModifiedLayouts() {
-    const modifiedLayoutsPath = this.dir
-          .get_child("data")
-          .get_child("gnome-shell-osk-layouts.gresource")
-          .get_path();
-    return Gio.Resource.load(modifiedLayoutsPath);
+    if (!this._modifiedLayouts) {
+      const modifiedLayoutsPath = this.dir
+            .get_child("data")
+            .get_child("gnome-shell-osk-layouts.gresource")
+            .get_path();
+      this._modifiedLayouts = Gio.Resource.load(modifiedLayoutsPath);
+    }
+    return this._modifiedLayouts;
   }
 
   enable_overrides() {
@@ -453,11 +456,8 @@ export default class enhancedosk extends Extension {
         }
       });
 
-    // Unregister original osk layouts resource file
-    this.getDefaultLayouts()._unregister();
-
     // Register modified osk layouts resource file
-  this.getModifiedLayouts()._register();
+    this.getModifiedLayouts()._register();
   }
 
   disable_overrides() {
@@ -466,16 +466,6 @@ export default class enhancedosk extends Extension {
 
     // Unregister modified osk layouts resource file
     this.getModifiedLayouts()._unregister();
-
-    // Register original osk layouts resource file
-    this.getDefaultLayouts()._register();
-  }
-
-  getDefaultLayouts() {
-    return Gio.Resource.load(
-      (GLib.getenv("JHBUILD_PREFIX") || "/usr") +
-        "/share/gnome-shell/gnome-shell-osk-layouts.gresource"
-    );
   }
 
   // In case the keyboard is currently disabled in accessibility settings, attempting to _destroyKeyboard() yields a TypeError ("TypeError: this.actor is null")
